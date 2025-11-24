@@ -61,3 +61,5 @@ float get_wind(void);
 float get_pressure(void);
 
 #endif /* PROTOCOL_H_ */
+
+//questo codice ora funziona
