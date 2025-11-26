@@ -1,19 +1,19 @@
 #include "protocol.h"
 
-// --- FUNZIONI DI UTILITÀ ---
+
 
 float get_random_float(float min, float max) {
     // Generazione del float casuale
     return min + (rand() / (float) RAND_MAX) * (max - min);
 }
 
-// Implementazione funzioni meteo (realistiche solo nell'intervallo)
-float get_temperature() { return get_random_float(5.0, 35.0); }
-float get_humidity()    { return get_random_float(40.0, 95.0); }
-float get_wind()        { return get_random_float(0.0, 50.0); }
-float get_pressure()    { return get_random_float(980.0, 1030.0); }
 
-// Verifica città valida
+float get_temperature() { return get_random_float(-10.0, 40.0); }  // Spec: -10.0 to 40.0
+float get_humidity()    { return get_random_float(20.0, 100.0); }  // Spec: 20.0 to 100.0
+float get_wind()        { return get_random_float(0.0, 100.0); }   // Spec: 0.0 to 100.0
+float get_pressure()    { return get_random_float(950.0, 1050.0); } // Spec: 950.0 to 1050.0
+
+// Verifica cittï¿½ valida
 int is_city_valid(const char* city) {
     const char* valid_cities[] = {
         "bari", "roma", "milano", "napoli", "torino",
@@ -59,11 +59,11 @@ int main(int argc, char *argv[]) {
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
 
-    // !!! CORREZIONE CRITICA: Usa INADDR_ANY per accettare su tutte le interfacce !!!
+
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        printf("Errore Bind. Controlla che la porta %d non sia già in uso.\n", port);
+        printf("Errore Bind. Controlla che la porta %d non sia giï¿½ in uso.\n", port);
         close(server_socket);
         #if defined _WIN32
              WSACleanup();
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
     }
     printf("In attesa di connessioni...\n");
 
-    // 4. Ciclo Infinito
+
     while (1) {
         struct sockaddr_in client_addr;
         int client_len = sizeof(client_addr);
@@ -106,17 +106,17 @@ int main(int argc, char *argv[]) {
         printf("Richiesta '%c %s' dal client ip %s\n",
                     req.type, req.city, inet_ntoa(client_addr.sin_addr));
 
-        // Prepara risposta
+
         weather_response_t resp = {0};
         resp.type = req.type;
 
-        // Logica decisionale
+
         if (!is_city_valid(req.city)) {
-            resp.status = 1; // Città errata
+            resp.status = 1; // Cittï¿½ errata
             resp.value = 0.0;
             resp.type = '\0';
         } else {
-            // Verifica validità Tipo
+            // Verifica validitï¿½ Tipo
             int type_ok = (req.type == 't' || req.type == 'h' || req.type == 'w' || req.type == 'p');
 
             if (!type_ok) {

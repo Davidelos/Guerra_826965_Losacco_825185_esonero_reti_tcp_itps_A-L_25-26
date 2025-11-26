@@ -15,7 +15,7 @@
     // Se siamo su Windows
     #include <winsock2.h>
     #include <ws2tcpip.h>
-    // Definiamo 'close' come 'closesocket' per uniformità
+    // Definiamo 'close' come 'closesocket' per uniformitï¿½
     #define close closesocket
     // Definizione per la funzione case-insensitive (usata nel Server)
     #define strcasecmp _stricmp
@@ -35,7 +35,7 @@
 // --- SEZIONE 2: Costanti ---
 #define DEFAULT_PORT 56700
 // Ho mantenuto l'IP originale, ma useremo 127.0.0.1 per il test locale
-#define DEFAULT_IP "172.29.25.122"
+#define DEFAULT_IP "127.0.0.1"
 #define BUFFER_SIZE 512
 #define CITY_LEN 64
 
@@ -44,12 +44,12 @@
 // Messaggio di Richiesta (Client -> Server)
 typedef struct {
     char type;         // 't', 'h', 'w', 'p'
-    char city[CITY_LEN]; // Nome città (terminato da \0)
+    char city[CITY_LEN]; // Nome cittï¿½ (terminato da \0)
 } weather_request_t;
 
 // Messaggio di Risposta (Server -> Client)
 typedef struct {
-    unsigned int status; // 0=OK, 1=No Città, 2=Invalid Type
+    unsigned int status; // 0=OK, 1=No Cittï¿½, 2=Invalid Type
     char type;           // Eco della richiesta
     float value;         // Valore meteo
 } weather_response_t;
