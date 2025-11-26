@@ -1,31 +1,17 @@
 #include "protocol.h"
 
-<<<<<<< HEAD
-// --- Funzioni Meteo (Simulazione) ---
-=======
-
->>>>>>> b4c1d5b71e5a89d5ca4ce93d5de237b402c33b50
+// Funzioni Meteo (Simulazione)
 
 float get_random_float(float min, float max) {
     return min + (rand() / (float) RAND_MAX) * (max - min);
 }
 
-<<<<<<< HEAD
 float get_temperature() { return get_random_float(5.0, 35.0); }
 float get_humidity()    { return get_random_float(40.0, 95.0); }
 float get_wind()        { return get_random_float(0.0, 50.0); }
 float get_pressure()    { return get_random_float(980.0, 1030.0); }
 
 
-=======
-
-float get_temperature() { return get_random_float(-10.0, 40.0); }  // Spec: -10.0 to 40.0
-float get_humidity()    { return get_random_float(20.0, 100.0); }  // Spec: 20.0 to 100.0
-float get_wind()        { return get_random_float(0.0, 100.0); }   // Spec: 0.0 to 100.0
-float get_pressure()    { return get_random_float(950.0, 1050.0); } // Spec: 950.0 to 1050.0
-
-// Verifica cittï¿½ valida
->>>>>>> b4c1d5b71e5a89d5ca4ce93d5de237b402c33b50
 int is_city_valid(const char* city) {
     const char* valid_cities[] = {
         "bari", "roma", "milano", "napoli", "torino",
@@ -37,7 +23,6 @@ int is_city_valid(const char* city) {
     return 0;
 }
 
-// --- Main del Server ---
 int main(int argc, char *argv[]) {
     setvbuf(stdout, NULL, _IONBF, 0);
     srand((unsigned int)time(NULL));
@@ -70,17 +55,9 @@ int main(int argc, char *argv[]) {
     server_addr.sin_port = htons(port);
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY); // Accetta da qualsiasi interfaccia
 
-<<<<<<< HEAD
     // Bind
     if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        printf("Errore Bind. La porta %d è forse occupata?\n", port);
-=======
-
-    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-    if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        printf("Errore Bind. Controlla che la porta %d non sia giï¿½ in uso.\n", port);
->>>>>>> b4c1d5b71e5a89d5ca4ce93d5de237b402c33b50
+        printf("Errore Bind. La porta %d e' forse occupata?\n", port);
         close(server_socket);
         return -1;
     }
@@ -93,11 +70,7 @@ int main(int argc, char *argv[]) {
     }
     printf("In attesa di connessioni...\n");
 
-<<<<<<< HEAD
     // Ciclo Principale
-=======
-
->>>>>>> b4c1d5b71e5a89d5ca4ce93d5de237b402c33b50
     while (1) {
         struct sockaddr_in client_addr;
         int client_len = sizeof(client_addr);
@@ -119,34 +92,17 @@ int main(int argc, char *argv[]) {
         printf("Ricevuta richiesta '%c %s' da IP %s\n",
                          req.type, req.city, inet_ntoa(client_addr.sin_addr));
 
-<<<<<<< HEAD
         // Elaborazione
         weather_response_t resp = {0};
         resp.type = req.type;
 
         if (!is_city_valid(req.city)) {
-            resp.status = 1;
+            resp.status = 1; // Città non trovata
         } else {
-=======
-        printf("Richiesta '%c %s' dal client ip %s\n",
-                    req.type, req.city, inet_ntoa(client_addr.sin_addr));
-
-
-        weather_response_t resp = {0};
-        resp.type = req.type;
-
-
-        if (!is_city_valid(req.city)) {
-            resp.status = 1; // Cittï¿½ errata
-            resp.value = 0.0;
-            resp.type = '\0';
-        } else {
-            // Verifica validitï¿½ Tipo
->>>>>>> b4c1d5b71e5a89d5ca4ce93d5de237b402c33b50
             int type_ok = (req.type == 't' || req.type == 'h' || req.type == 'w' || req.type == 'p');
 
             if (!type_ok) {
-                resp.status = 2;
+                resp.status = 2; // Tipo non valido
             } else {
                 resp.status = 0; // OK
                 if (req.type == 't') resp.value = get_temperature();
