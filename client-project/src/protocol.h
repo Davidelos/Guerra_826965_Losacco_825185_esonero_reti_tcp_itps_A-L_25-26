@@ -10,28 +10,43 @@
 #include <string.h>
 #include <time.h>
 
-//  Compatibilità Cross-Platform
+
 #if defined _WIN32
+
     #include <winsock2.h>
     #include <ws2tcpip.h>
+
+
+    #pragma comment(lib, "ws2_32.lib")
+
+
     #define close closesocket
     #define strcasecmp _stricmp
-    void clear_winsock() { WSACleanup(); }
+
+    typedef int socklen_t;
+
+
+    static void cleanup_winsock(void) { WSACleanup(); }
+
 #else
+
     #include <unistd.h>
     #include <sys/types.h>
     #include <sys/socket.h>
     #include <netinet/in.h>
     #include <arpa/inet.h>
     #include <netdb.h>
+    #include <strings.h>
+
+    #define INVALID_SOCKET -1
+    #define SOCKET_ERROR -1
 #endif
 
-// Costanti di Rete
+
 #define DEFAULT_PORT 56700
 #define DEFAULT_IP "127.0.0.1"
 #define BUFFER_SIZE 512
 #define CITY_LEN 64
-
 
 // Messaggio di Richiesta (Client -> Server)
 typedef struct {
@@ -45,11 +60,5 @@ typedef struct {
     char type;           // Eco del tipo di dato richiesto
     float value;         // Il valore meteo
 } weather_response_t;
-
-// Funzioni
-float get_temperature(void);
-float get_humidity(void);
-float get_wind(void);
-float get_pressure(void);
 
 #endif /* PROTOCOL_H_ */

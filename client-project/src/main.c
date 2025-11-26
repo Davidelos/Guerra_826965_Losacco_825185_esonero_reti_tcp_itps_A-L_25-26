@@ -37,11 +37,11 @@ int main(int argc, char *argv[]) {
     }
 
     if (!request_provided) {
-        printf("Errore: Parametro -r obbligatorio. Uso: %s ... -r \"tipo citta\"\n", argv[0]);
+        printf("Errore: Parametro -r obbligatorio.\nUso: %s -s <IP> -p <PORTA> -r \"<t|h|w|p> <citta>\"\n", argv[0]);
         return -1;
     }
 
-    // Inizializzazione Winsock (solo Windows)
+    // Inizializzazione Winsock (Necessario solo su Windows)
     #if defined _WIN32
         WSADATA wsa_data;
         if (WSAStartup(MAKEWORD(2, 2), &wsa_data) != 0) {
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     // Creazione Socket
     int client_socket = socket(PF_INET, SOCK_STREAM, 0);
     if (client_socket < 0) {
-        printf("Errore durante la creazione del socket.\n");
+        perror("Errore creazione socket");
         return -1;
     }
 
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     // Connessione
     if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         printf("Errore: Impossibile connettersi al server %s:%d.\n", server_ip, port);
-        close(client_socket);
+        close(client_socket); // 'close' è mappato a 'closesocket' su Windows grazie a protocol.h
         #if defined _WIN32
             WSACleanup();
         #endif
@@ -92,23 +92,23 @@ int main(int argc, char *argv[]) {
     }
 
     // Stampa Risultati
-    printf("Risposta dal server (%s): ", server_ip);
+    printf("Risposta dal server (%s):\n", server_ip);
 
     if (resp.status == 1) {
-        printf("Citta non disponibile.\n");
+        printf(" -> Citta '%s' non disponibile.\n", req.city);
     } else if (resp.status == 2) {
-        printf("Tipo di richiesta non valido.\n");
+        printf(" -> Tipo di richiesta '%c' non valido.\n", req.type);
     } else if (resp.status == 0) {
-        printf("%s -> ", req.city);
+        printf(" -> %s: ", req.city);
         switch (resp.type) {
-            case 't': printf("Temperatura: %.1f°C\n", resp.value); break;
+            case 't': printf("Temperatura: %.1f C\n", resp.value); break;
             case 'h': printf("Umidita: %.1f%%\n", resp.value); break;
             case 'w': printf("Vento: %.1f km/h\n", resp.value); break;
             case 'p': printf("Pressione: %.1f hPa\n", resp.value); break;
             default:  printf("Dato sconosciuto: %.1f\n", resp.value); break;
         }
     } else {
-        printf("Ricevuto status sconosciuto.\n");
+        printf("Ricevuto status sconosciuto (%d).\n", resp.status);
     }
 
     close(client_socket);
