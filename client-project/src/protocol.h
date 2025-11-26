@@ -46,7 +46,7 @@ typedef struct {
     float value;         // Il valore meteo
 } weather_response_t;
 
-// Funzioni ---
+// Funzioni
 float get_temperature(void);
 float get_humidity(void);
 float get_wind(void);
