@@ -1,6 +1,6 @@
 #include "protocol.h"
 
-// Funzioni Meteo (Simulazione)
+// Funzioni Meteo (Implementazione locale al server)
 
 float get_random_float(float min, float max) {
     return min + (rand() / (float) RAND_MAX) * (max - min);
@@ -18,6 +18,7 @@ int is_city_valid(const char* city) {
         "palermo", "genova", "bologna", "firenze", "venezia"
     };
     for (int i = 0; i < 10; i++) {
+        // strcasecmp è mappato su _stricmp per Windows in protocol.h
         if (strcasecmp(city, valid_cities[i]) == 0) return 1;
     }
     return 0;
@@ -45,25 +46,29 @@ int main(int argc, char *argv[]) {
     // Creazione Socket
     int server_socket = socket(PF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
-        printf("Impossibile creare il socket.\n");
+        perror("Impossibile creare il socket");
         return -1;
     }
+
+    // Opzione per riutilizzare l'indirizzo rapidamente (utile in fase di debug)
+    int opt = 1;
+    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&opt, sizeof(opt));
 
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
-    server_addr.sin_addr.s_addr = htonl(INADDR_ANY); // Accetta da qualsiasi interfaccia
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     // Bind
     if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        printf("Errore Bind. La porta %d e' forse occupata?\n", port);
+        printf("Errore Bind. La porta %d e' forse occupata o servono permessi root?\n", port);
         close(server_socket);
         return -1;
     }
 
     // Listen
-    if (listen(server_socket, SOMAXCONN) < 0) {
+    if (listen(server_socket, 10) < 0) { // SOMAXCONN a volte crea problemi di portabilità, 10 è sicuro
         printf("Errore durante la fase di Listen.\n");
         close(server_socket);
         return -1;
@@ -73,27 +78,33 @@ int main(int argc, char *argv[]) {
     // Ciclo Principale
     while (1) {
         struct sockaddr_in client_addr;
-        int client_len = sizeof(client_addr);
+        socklen_t client_len = sizeof(client_addr); // socklen_t gestito in protocol.h
 
         // Accept
-        int client_socket = accept(server_socket, (struct sockaddr*)&client_addr, (socklen_t*)&client_len);
-        if (client_socket < 0) continue;
+        int client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &client_len);
+        if (client_socket < 0) {
+            // Su alcuni OS accept può essere interrotto da segnali, non è fatal error
+            continue;
+        }
+
+        printf("Client connesso da IP %s\n", inet_ntoa(client_addr.sin_addr));
 
         // Ricezione richiesta
         weather_request_t req;
         int bytes_read = recv(client_socket, (char*)&req, sizeof(req), 0);
 
         if (bytes_read != sizeof(req)) {
+            printf("Errore ricezione o client disconnesso prematuramente.\n");
             close(client_socket);
             continue;
         }
 
         req.city[CITY_LEN - 1] = '\0';
-        printf("Ricevuta richiesta '%c %s' da IP %s\n",
-                         req.type, req.city, inet_ntoa(client_addr.sin_addr));
+        printf(" -> Richiesta: tipo '%c' per citta '%s'\n", req.type, req.city);
 
         // Elaborazione
-        weather_response_t resp = {0};
+        weather_response_t resp;
+        memset(&resp, 0, sizeof(resp)); // Pulizia memoria
         resp.type = req.type;
 
         if (!is_city_valid(req.city)) {
@@ -115,6 +126,7 @@ int main(int argc, char *argv[]) {
         // Invio e chiusura
         send(client_socket, (char*)&resp, sizeof(resp), 0);
         close(client_socket);
+        printf(" -> Risposta inviata e connessione chiusa.\n\n");
     }
 
     close(server_socket);
